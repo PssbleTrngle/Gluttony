@@ -7,6 +7,11 @@ import Apikey from './models/Apikey';
 import Login from './models/Login';
 import { Service } from './models/Service';
 import User from './models/User';
+import Saved from './models/Saved';
+import Watched from './models/Watched';
+import ApiController from './controller/ApiController';
+import WatchedController from './controller/WatchedController';
+import StatController from './controller/StatController';
 
 interface IRoute {
     method: string;
@@ -22,11 +27,7 @@ const Resources: {
     filter?: Filter;
 }[] = [];
 
-export const Routes: IRoute[] = [
-    ...resource('users', User),
-    ...resource('apikeys', Apikey, true, { all: true, one: true }),
-    ...resource('logins', Login, true, { all: true, one: true, remove: true }),
-    ...resource('services', Service),
+const authRoutes: IRoute[] = [
     {
         method: 'post',
         route: '/auth/:name',
@@ -53,6 +54,71 @@ export const Routes: IRoute[] = [
         action: 'logout',
         auth: true,
     },
+]
+
+const apiRoutes: IRoute[] = [
+    {
+        method: 'get',
+        route: '/img/:path(*)',
+        action: 'image',
+        controller: ApiController,
+    },
+    {
+        method: 'get',
+        route: '/api/shows/search',
+        action: 'search',
+        controller: ApiController,
+    },
+    {
+        method: 'get',
+        route: '/api/shows/:id/episodes',
+        action: 'episodes',
+        controller: ApiController,
+    },
+    {
+        method: 'get',
+        route: '/api/shows/:id',
+        action: 'show',
+        controller: ApiController,
+    },
+    {
+        method: 'get',
+        route: '/api/episodes/:id',
+        action: 'episode',
+        controller: ApiController,
+    },
+]
+
+export const Routes: IRoute[] = [
+    ...resource('users', User),
+    ...resource('apikeys', Apikey, true, { all: true, one: true }),
+    ...resource('logins', Login, true, { all: true, one: true, remove: true }),
+    ...resource('services', Service),
+    ...resource('saved', Saved, true),
+    ...resource('watched', Watched, true),
+    {
+        method: 'get',
+        route: '/api/shows/watched',
+        controller: WatchedController,
+        action: 'shows',
+        auth: true,
+    },
+    ...apiRoutes,
+    ...authRoutes,
+    {
+        method: 'get',
+        route: '/api/stats/:name',
+        action: 'value',
+        controller: StatController,
+        auth: true,
+    },
+    {
+        method: 'post',
+        route: '/api/stats/:name',
+        action: 'calculate',
+        controller: StatController,
+        auth: true,
+    },
     {
         method: 'get',
         route: '/api/user',
@@ -69,6 +135,8 @@ interface Filter {
     save?: boolean;
     remove?: boolean;
     update?: boolean;
+    removeMany?: boolean;
+    count?: boolean;
 }
 
 /**
@@ -89,6 +157,11 @@ function resource<E extends BaseEntity>(url: string, resource: EntityStatic<E>, 
         action: 'all'
     }, {
         method: 'get',
+        route: `/api/${url}/count`,
+        controller, auth,
+        action: 'count'
+    }, {
+        method: 'get',
         route: `/api/${url}/:id`,
         controller, auth,
         action: 'one'
@@ -107,6 +180,11 @@ function resource<E extends BaseEntity>(url: string, resource: EntityStatic<E>, 
         route: `/api/${url}/:id`,
         controller, auth,
         action: 'update'
+    }, {
+        method: 'delete',
+        route: `/api/${url}`,
+        controller, auth,
+        action: 'removeMany'
     }].filter(({ action }) => !filter || (action in filter && (filter as any)[action]))
 }
 

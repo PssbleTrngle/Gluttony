@@ -1,6 +1,8 @@
 import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import Apikey from "./Apikey";
 import Login from "./Login";
+import Saved from "./Saved";
+import Watched from "./Watched";
 
 @Entity()
 export default class User extends BaseEntity {
@@ -30,5 +32,11 @@ export default class User extends BaseEntity {
 
     @OneToMany(() => Login, login => login.user)
     logins!: Promise<Login[]>;
+
+    @OneToMany(() => Saved, saved => saved.user)
+    saved!: Promise<Saved[]>;
+
+    @OneToMany(() => Watched, watched => watched.user)
+    watched!: Promise<Watched[]>;
 
 }

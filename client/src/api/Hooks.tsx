@@ -77,10 +77,10 @@ export function useApiBunch<R>(endpoints: string[]) {
  * @param endpoint The url
  * @param params The query params
  */
-export function useApiList<M extends IModel>(endpoint: string, params?: ParsedUrlQueryInput) {
+export function useApiList<M>(endpoint: string, params?: ParsedUrlQueryInput) {
     const [models, loading, message] = useApi<IList<M>>(endpoint, params);
 
-    
+
     /*
     const sorted = useMemo(() => (models ?? [])
         .sort((a, b) => a.id - b.id), [models]);
@@ -97,14 +97,15 @@ export function useApiList<M extends IModel>(endpoint: string, params?: ParsedUr
  * @param endpoint The url
  * @param params The query params
  */
-export function useLoadingList<M extends IModel>(endpoint: string, params: ParsedUrlQueryInput | Render<M[]>, render?: Render<M[]>): JSX.Element | null {
+export function useLoadingList<M>(endpoint: string, params: ParsedUrlQueryInput | Render<M[]>, render?: Render<M[]>): JSX.Element | null {
     const p = typeof params === 'object' ? params : undefined;
     const r = typeof params === 'function' ? params : render;
     const [result, loading, error] = useApiList<M>(endpoint, p);
 
     if (loading) return <Loading />
     if (error) return <span className='empty-info'>{error || 'Not found'}</span>
-    return (r && result) ? r(result) : null;
+    const o = (r && result) ? r(result) : null;
+    return Array.isArray(o) ? <>{o}</> : o;
 }
 
 /**
@@ -143,7 +144,7 @@ export const Loading = () => {
     return <Icon className='loading inline' icon={faSpinner} />
 }
 
-export type Render<R> = (result: R) => JSX.Element | null;
+export type Render<R> = (result: R) => JSX.Element | JSX.Element[] | null;
 
 /**
  * React hook to render loading componets universally
@@ -158,5 +159,14 @@ export function useLoading<R>(endpoint: string, params: ParsedUrlQueryInput | Re
 
     if (loading) return <Loading />
     if (!result) return <span className='empty-info'>{error || 'Not found'}</span>
-    return r ? r(result) : null;
+    const o = r ? r(result) : null;
+    return Array.isArray(o) ? <>{o}</> : o;
+}
+
+export function useEvent<E extends keyof WindowEventMap>(event: E, listener: (e: WindowEventMap[E]) => any) {
+    useEffect(() => {
+        window.addEventListener(event, listener)
+        return () => window.removeEventListener(event, listener);
+
+    })
 }

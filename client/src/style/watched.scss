@@ -1,0 +1,44 @@
+#watched {
+    .covers {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 170px);
+        justify-content: center;
+        column-gap: 15px;
+        row-gap: 25px;
+        padding: 10px;
+
+        & > a {
+            position: relative;
+
+            .percentage {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                opacity: 0;
+                color: #fff;
+                text-shadow: 0 0 8px #000;
+                font-size: 60px;
+            }
+
+            .progress {
+                background-color: $primary;
+                height: 5px;
+
+                &.done {
+                    background-color: $green;
+                }
+            }
+
+            &:hover {
+                .percentage {
+                    opacity: 1;
+                }
+                
+                img {
+                    filter: brightness(1.4);
+                }
+            }
+        }
+    }
+}

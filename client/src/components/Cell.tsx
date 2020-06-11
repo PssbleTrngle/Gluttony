@@ -1,6 +1,6 @@
-import React, { CSSProperties, HTMLAttributes } from 'react';
+import React, { CSSProperties, HTMLAttributes, ReactNode } from 'react';
 
-type cellProps = { area: string, children: JSX.Element[] | JSX.Element } & HTMLAttributes<HTMLDivElement>;
+type cellProps = { area: string, children: ReactNode } & HTMLAttributes<HTMLDivElement>;
 const Cell = ({ area, children, style, className, ...props }: cellProps) => {
     return <div
         style={{ gridArea: area, ...style } as CSSProperties}

@@ -2,6 +2,7 @@ import { BaseEntity, DeepPartial } from "typeorm";
 import { AuthRequest } from "..";
 import Timestamps from "../models/Timestamps";
 import User from "../models/User";
+import Watched from "../models/Watched";
 
 export class HttpError extends Error {
     constructor(public status_code: number, message?: string) {
@@ -10,7 +11,7 @@ export class HttpError extends Error {
 }
 
 export interface IEntity extends BaseEntity {
-    user?: User;
+    user?: User | Promise<User>;
     timestamps?: Timestamps;
 }
 export type EntityStatic<E extends IEntity> = { new(): E } & typeof BaseEntity;
@@ -22,10 +23,11 @@ export type EntityStatic<E extends IEntity> = { new(): E } & typeof BaseEntity;
 export default function <E extends IEntity>(Resource: EntityStatic<E>, owned: boolean) {
     return class ResourceController {
 
-        private authorized(entity: IEntity | undefined | null, req: AuthRequest) {
+        private async authorized(entity: IEntity | undefined | null, req: AuthRequest) {
             if (owned && entity) {
-                if (!entity.user) throw new Error(`User not included in owned entity ${Resource}`)
-                if (entity.user.id !== req.user.id) {
+                const user = await entity.user;
+                if (!user) throw new Error(`User not included in owned entity ${Resource}`)
+                if (user.id !== req.user.id) {
                     throw new HttpError(401, 'Not authorized')
                 }
             }
@@ -46,39 +48,57 @@ export default function <E extends IEntity>(Resource: EntityStatic<E>, owned: bo
                 take: limit, skip: offset,
             });
 
-            // Hotfix until order by embedded entities works
             return resources;
-            /*
-            return resources.sort((a, b) => {
-                const [ta, tb] = [a, b].map(e => e.timestamps?.created ?? 0);
-                return tb - ta;
-            })
-            */
+        }
+
+        async count(req: AuthRequest) {
+            const count = await Resource.count({
+                where: owned ? { user: req.user } : {},
+            });
+
+            return { count };
         }
 
         async one(req: AuthRequest) {
             const entity = await Resource.findOne<IEntity>(req.params.id);
-            this.authorized(entity, req);
+            await this.authorized(entity, req);
             return entity;
         }
 
         async save(req: AuthRequest) {
-            const values: DeepPartial<typeof Resource> = {
-                ...req.body, user: req.user,
-            }
-            return Resource.create(values).save();
+            const values: DeepPartial<typeof Resource>[] = Array.isArray(req.body) ? req.body : [req.body];
+            const resources = Resource.create(values.map(v => ({ ...v, user: req.user })));
+            return Promise.all(resources.map(r => r.save())).then(() => 201);
         }
 
         async update(req: AuthRequest) {
             const entity = await Resource.findOne<IEntity>(req.params.id);
-            this.authorized(entity, req);
+            await this.authorized(entity, req);
             return Resource.getRepository().update(req.params.id, req.body)
         }
 
         async remove(req: AuthRequest) {
             const entity = await Resource.findOne<IEntity>(req.params.id);
-            this.authorized(entity, req);
+            await this.authorized(entity, req);
             return entity?.remove();
+        }
+
+        async removeMany(req: AuthRequest) {
+            const { ids } = req.body;
+
+            const o = owned ? { user: req.user } : {}
+            //@ts-ignore
+            await Promise.all(ids.map(id => Watched.delete({ ...o, id })));
+
+            /*
+            await Resource.createQueryBuilder()
+                .where(owned ? { userId: req.user.id } : {})
+                .andWhere(() => 'id IN (:ids)', { ids })
+                .delete()
+                .execute();
+            */
+
+            return true;
         }
 
     }

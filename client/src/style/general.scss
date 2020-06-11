@@ -47,6 +47,33 @@ h5 {
     }
 }
 
+@mixin stripes($size: 50px) {
+    @keyframes stripes {
+        from {
+            background-position: 0 0;
+        }
+        to {
+            background-position: 0 ($size * -6 + 15px);
+        }
+    }
+
+    overflow: hidden;
+    &::after {
+        @include pseudo();
+        pointer-events: none;
+        opacity: 0.7;
+        height: 1000%;
+        animation: stripes 3s linear infinite;
+        background: repeating-linear-gradient(
+            -45deg,
+            $gray,
+            $gray $size,
+            darken($gray, 2%) $size,
+            darken($gray, 2%) $size * 2
+        );
+    }
+}
+
 .center {
     text-align: center;
 }
@@ -74,6 +101,8 @@ h5 {
     display: grid;
 
     height: 100vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 .single {
@@ -86,7 +115,7 @@ h5 {
     justify-content: center;
 
     grid-template:
-        ". nav" $nav-height
+        "searchbar nav" $nav-height
         "page page"
         / 1fr $nav-height;
 }
@@ -156,6 +185,13 @@ svg + span {
     margin: auto;
 }
 
+$mobile-width: 800px;
+@mixin mobile {
+    @media only screen and (max-width: #{$mobile-width}) {
+        @content;
+    }
+}
+
 @import "./forms.scss";
 @import "./nav.scss";
 @import "./dialog.scss";
@@ -164,3 +200,7 @@ svg + span {
 @import "./img.scss";
 @import "./login.scss";
 @import "./settings.scss";
+@import "./show.scss";
+@import "./search.scss";
+@import "./watched.scss";
+@import "./stats.scss";

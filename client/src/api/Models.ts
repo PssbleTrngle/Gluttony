@@ -32,13 +32,48 @@ export interface ILogin extends IModel {
     apiId: string | number;
 }
 
-export interface IEntry extends IOwned {
+export interface IEpisode {
+    id: number;
+    episodeName: string;
+    overview: string;
+    firstAired: string;
+    airedSeason: number;
+    airedEpisodeNumber: number;
+    seriesId: number;
+    runtime: number;
+    watched?: {
+        id: number;
+        timestamps: ITimestamps;
+    };
+}
+
+export interface IShowSearch {
+    banner: string;
+    poster: string;
+    firstAired: string;
+    id: number;
+    network: string;
+    overview: string;
+    seriesName: string;
+    slug: string;
+    status: 'Ended' | 'Ongoing' | string;
+}
+
+export interface IShow extends IShowSearch {
+    season: string;
+    genre: string[];
+}
+
+export interface IWatched extends IModel {
+    showID: number;
+    episodeID: number;
+}
+
+export interface IStat extends IModel {
+    value?: number;
+    name: string;
+    locked: boolean;
     timestamps: ITimestamps;
-    text?: string;
-    images?: string[];
-    link?: string;
-    title: string;
-    service?: IService;
 }
 
 export type IList<T> = Array<T>;

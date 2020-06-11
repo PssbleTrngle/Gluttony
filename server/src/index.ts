@@ -37,18 +37,20 @@ createConnection(config as any).then(async connection => {
     function wrapper(func: ApiFunc): ApiFunc {
         return async (req, res, next) => {
             try {
-                const r = func(req, res, next);
-                const result = r instanceof Promise ? await r : r;
+                const result = await func(req, res, next);
 
                 if (result !== void 0) {
                     if (!!result) {
 
                         if (typeof result === 'number') {
                             res.status(result).send();
-                        } if (result === true) {
+                        } else if (result === true) {
                             res.status(200).send();
                         } else {
-                            res.json(result);
+                            if (Array.isArray(result)) {
+                                const l = Number.parseInt(req.query.limit?.toString() ?? '');
+                                return res.json(result.slice(0, isNaN(l) ? 1000 : l));
+                            } else res.json(result);
                         }
 
                     } else {
@@ -125,4 +127,4 @@ createConnection(config as any).then(async connection => {
     });
 
 
-}).catch(error => console.log(error));
+}).catch(e => error(e));

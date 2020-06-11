@@ -1,4 +1,4 @@
-import { faCog, IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { faCog, IconDefinition, faHome } from '@fortawesome/free-solid-svg-icons';
 import classes from 'classnames';
 import React, { MemoExoticComponent, ReactNode, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Redirect, Route, Switch, useLocation } from 'react-router-dom';
@@ -12,6 +12,11 @@ import Apikeys from './pages/Apikeys';
 import Login from './pages/Login';
 import UserPanel from './pages/UserPanel';
 import './style/app.scss';
+import Home from './pages/Home';
+import Show from './pages/Show';
+import SearchBar from './components/Search';
+import Watched from './pages/Watched';
+import Stats from './pages/Stats';
 
 const SinglePage = ({ children }: { children: ReactNode }) => {
 	return <section className='single'>{children}</section>;
@@ -37,9 +42,13 @@ const App = () => {
 	const { theme } = settings.client;
 
 	const pages: IPage[] = [
+		{ path: '/home', component: Home, icon: faHome },
+		{ path: '/user/watched', component: Watched, id: 'watched' },
+		{ path: '/user/stats', component: Stats, id: 'stats' },
 		{ path: '/user', component: UserPanel },
 		{ path: '/settings/logins', component: Apikeys },
 		{ path: '/settings', component: Settings, icon: faCog },
+		{ path: '/show/:id', component: Show },
 	];
 
 	return (
@@ -52,6 +61,7 @@ const App = () => {
 							? <section className='container'>
 
 								<Navbar pages={pages.filter(p => !!p.icon)} />
+								<SearchBar />
 								<Dialog />
 
 								<Switch>
@@ -63,7 +73,7 @@ const App = () => {
 									)}
 
 									<Route exact path='/'>
-										<Redirect to='/timeline' />
+										<Redirect to='/home' />
 									</Route>
 
 									<Route path='/logout'>

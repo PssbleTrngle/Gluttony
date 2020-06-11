@@ -129,7 +129,7 @@ class Api {
         if (update && method !== 'get') this.update();
 
         if (response.ok)
-            return response.json() as Promise<Response<O>>;
+            return response.json().catch(e => ({})) as Promise<Response<O>>;
         else
             throw new Error(await response.text() ?? 'Internal server error');
 
