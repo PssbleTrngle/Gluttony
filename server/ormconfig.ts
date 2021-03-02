@@ -1,12 +1,9 @@
-import { debug } from './src/logging';
 require('dotenv').config({ path: './.env' });
-
-debug('Config Loaded');
 
 const ts = __filename.endsWith('.ts');
 const files = (folder: string) => [ts ? `src/${folder}/**/*.ts` : `build/src/${folder}/**/*.js`]
 
-export default {
+module.exports = {
    type: process.env.DB_DIALECT,
    database: process.env.DB_STORAGE || process.env.DB_NAME,
    synchronize: true,

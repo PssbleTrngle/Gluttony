@@ -1,21 +1,51 @@
 import { AuthRequest } from "..";
 import Watched from '../models/Watched'
-import ApiController from "./ApiController";
+import Api, { validEpisode } from "../Api";
 import { debug } from "../logging";
+import ResourceController from "./ResourceController";
+import e from "express";
 
 export default class WatchedController {
 
-    async shows(req: AuthRequest) {
+    async import(req: AuthRequest) {
+        const { show: slug, episodes, season, release, name: n } = req.body;
 
-        const watched: any[] = await Watched.createQueryBuilder()
-            .groupBy('showID')
-            .select('showID')
-            .addSelect('COUNT(*) AS count')
-            .getRawMany();
+        const name = n ?? slug.replace('-', ' ')
 
-        return Promise.all(watched.map(({ showID, count }) =>
-            ApiController.getShow(showID).then(s => ({ ...s, count }))
-        ))
+        const shows = await Api.searchShow({ name })
+            .catch(() => Api.searchShow({ slug }));
+
+        const date = new Date(release);
+
+        const sorted = shows.filter(s => {
+            const d = new Date(s.firstAired);
+            return d.getFullYear() === date.getFullYear();
+        });
+
+        const show = sorted[0];
+
+        if (show) {
+            const all = await Api.getShowEpisodes(show.id);
+            const forSeason = all
+                .filter(validEpisode)
+                .filter(e => e.airedSeason === season);
+
+            const watched = forSeason.filter((_, i) => episodes.includes(i + 1));
+
+            const values: any[] = watched.map(e => ({ episodeID: e.id, user: req.user, showID: show.id }));
+            const [sql, args] = Watched
+                .createQueryBuilder()
+                .insert()
+                .values(values)
+                .getQueryAndParameters();
+            const nsql = sql.replace('INSERT INTO', 'INSERT OR IGNORE INTO')
+
+            await Watched.query(nsql, args)
+
+            return 201;
+        }
+
+        return null;
     }
 
 }

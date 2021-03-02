@@ -7,7 +7,7 @@ export default class ServiceSeeder implements Seeder {
 
         const services: { [K in keyof Service]?: Service[K] }[] = []
 
-        if (process.env.DEBUG === 'true') {
+        if (process.env.NODE_ENV === 'development') {
             await Service.delete({});
         }
 

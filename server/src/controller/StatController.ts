@@ -1,12 +1,15 @@
 import { AuthRequest } from "..";
-import { warn, debug } from "../logging";
+import Api from "../Api";
+import { error, warn } from "../logging";
 import Stat from "../models/Stat";
 import User from "../models/User";
 import Watched from "../models/Watched";
-import ApiController from "./ApiController";
 import { HttpError } from "./ResourceController";
 
 export type Calculator = (user: User, ...set: ((v: number) => Promise<any>)[]) => Promise<any>;
+function exists<T>(t: T | null | undefined | void): t is T {
+    return t !== void 0 && t !== null && t !== undefined;
+}
 
 export default class StatController {
 
@@ -42,7 +45,7 @@ export default class StatController {
             await stats[i].save();
         })
 
-        await calc.calc(user, ...set);
+        await calc.calc(user, ...set).catch(() => error(`Calculation for ${name} encountered error`));
 
         await Promise.all(stats.map(async s => {
             if (s.locked) {
@@ -103,11 +106,12 @@ StatController.register(async (user, setTime) => {
         .forEach(id => counts.set(id, (counts.get(id) ?? 0) + 1));
 
     const shows = await Promise.all(Array.from(counts.keys())
-        .map(id => ApiController.getShow(id).catch(() => [])
-            .then(show => ({ count: counts.get(id) ?? 0, show })))
-    );
+        .map(id => Api.getShow(id)
+            .then(show => ({ count: counts.get(id) ?? 0, show }))
+            .catch(() => null)
+        ));
 
-    const total = shows.reduce((t, { show, count }) => t + Number.parseInt(show.runtime) * count, 0);
+    const total = shows.filter(exists).reduce((t, { show, count }) => t + Number.parseInt(show.runtime) * count, 0);
 
     await setTime(total);
 
@@ -117,20 +121,10 @@ StatController.register(async (user, setEpisodes) => {
 
     const watched = await Watched.find({ where: { user } });
 
-    /*
-    await Promise.all(watched.map(async w => {
-        const episode = await ApiController.getEpisode(w.episodeID);
-        if (episode.airedSeason < 1 || !episode.firstAired) {
-            console.log('Found invalid')
-            await w.remove();
-        }
-    }));
-    */
-
     const shows = await Promise.all(watched
         .map(w => w.showID)
         .filter((s, i, a) => a.indexOf(s) === i)
-        .map(showID => ApiController.getShowEpisodes(showID, false).catch(() => []))
+        .map(showID => Api.getShowEpisodes(showID).catch(() => []))
     );
 
     const episodes = shows.reduce((t, s) => t + s.length, 0);

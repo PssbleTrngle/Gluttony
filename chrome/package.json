@@ -1,0 +1,17 @@
+{
+    "scripts": {
+        "clean": "rimraf dist/*",
+        "build": "npm run clean && tsc",
+        "watch": "npm run clean && tsc -w"
+    },
+    "dependencies": {
+        "@types/axios": "^0.14.0",
+        "@types/chrome": "0.0.91",
+        "@types/jquery": "^3.3.31",
+        "@types/node": "^13.1.6"
+    },
+    "devDependencies": {
+        "axios": "^0.19.2",
+        "rimraf": "^3.0.0"
+    }
+}

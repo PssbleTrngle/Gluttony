@@ -2,7 +2,7 @@ import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn, Index } 
 import User from "./User";
 
 @Entity()
-@Index('show_per_user', e => [e.showID, e.user], { unique: true })
+@Index('saved:show_per_user', e => [e.showID, e.user], { unique: true })
 export default class Saved extends BaseEntity {
 
     @PrimaryGeneratedColumn()

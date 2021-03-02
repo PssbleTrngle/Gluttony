@@ -8,8 +8,8 @@ import User from "./User";
 type K = keyof Login;
 
 @Entity()
-@Index('service_per_user', (l: Login) => [l.service, l.user], { unique: true })
-@Index('identification_per_service', (l: Login) => [l.service, l.apiId], { unique: true })
+@Index('login:service_per_user', (l: Login) => [l.service, l.user], { unique: true })
+@Index('login:identification_per_service', (l: Login) => [l.service, l.apiId], { unique: true })
 export default class Login extends BaseEntity {
 
     /* 10 Days */

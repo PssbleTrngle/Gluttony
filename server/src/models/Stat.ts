@@ -3,7 +3,7 @@ import User from "./User";
 import Timestamps from "./Timestamps";
 
 @Entity()
-@Index('name_per_user', e => [e.name, e.user], { unique: true })
+@Index('stat:name_per_user', e => [e.name, e.user], { unique: true })
 export default class Stat extends BaseEntity {
 
     @PrimaryGeneratedColumn()

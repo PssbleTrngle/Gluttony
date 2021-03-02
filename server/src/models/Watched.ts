@@ -3,7 +3,7 @@ import User from "./User";
 import Timestamps from "./Timestamps";
 
 @Entity()
-@Index('episode_per_user', e => [e.episodeID, e.user], { unique: true })
+@Index('watched:episode_per_user', e => [e.episodeID, e.user], { unique: true })
 export default class Watched extends BaseEntity {
 
     @PrimaryGeneratedColumn()

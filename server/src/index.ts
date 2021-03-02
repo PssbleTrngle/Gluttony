@@ -5,10 +5,12 @@ import express, { NextFunction } from "express";
 import { ParamsDictionary, Request, Response } from 'express-serve-static-core';
 import "reflect-metadata";
 import { createConnection } from "typeorm";
+//@ts-ignore
 import config from '../ormconfig';
 import AuthController from "./controller/AuthController";
-import { debug, error, success } from "./logging";
+import { debug, error, success, route as logRoute } from "./logging";
 import Apikey from "./models/Apikey";
+import Stat from './models/Stat';
 import User from "./models/User";
 import { Routes } from "./routes";
 
@@ -91,15 +93,16 @@ createConnection(config as any).then(async connection => {
         if (auth) (app as any)[method](route, wrapper(new AuthController().authenticate));
 
         const c = new controller();
+        if(!(action in c)) throw new Error(`Controller does not have action '${action}' for route '${route}'`);
 
         (app as any)[method](route, wrapper((req: Request, res: Response, next: Function) => {
-            debug(`[${method.toUpperCase()}] -> '${route}'`);
+            logRoute(`[${method.toUpperCase()}] -> '${route}'`);
             return c[action](req, res, next);
         }));
     });
 
     // Insert default users for development
-    if (process.env.DEBUG) {
+    if (process.env.NODE_ENV === 'development') {
 
         const anyUser = await User.findOne()
         const { DEV_PASSWORD } = process.env;
@@ -119,6 +122,9 @@ createConnection(config as any).then(async connection => {
         }
 
     }
+
+    // Cancel open calculations
+    await Stat.createQueryBuilder().update({ locked: false }).execute();
 
     const PORT = process.env.PORT ?? 8080;
     app.listen(PORT, () => {

@@ -3,6 +3,8 @@ import Apikey from "./Apikey";
 import Login from "./Login";
 import Saved from "./Saved";
 import Watched from "./Watched";
+import Ranking from "./Ranking";
+import Rating from "./Rating";
 
 @Entity()
 export default class User extends BaseEntity {
@@ -27,16 +29,22 @@ export default class User extends BaseEntity {
     @Column({ nullable: true })
     email!: string;
 
-    @OneToMany(() => Apikey, key => key.user)
-    keys!:  Promise<Apikey[]>;
+    @OneToMany(() => Apikey, k => k.user)
+    keys!: Promise<Apikey[]>;
 
-    @OneToMany(() => Login, login => login.user)
+    @OneToMany(() => Login, l => l.user)
     logins!: Promise<Login[]>;
 
-    @OneToMany(() => Saved, saved => saved.user)
+    @OneToMany(() => Saved, s => s.user)
     saved!: Promise<Saved[]>;
 
-    @OneToMany(() => Watched, watched => watched.user)
+    @OneToMany(() => Watched, w => w.user)
     watched!: Promise<Watched[]>;
+
+    @OneToMany(() => Ranking, r => r.user)
+    rankings!: Promise<Ranking[]>;
+
+    @OneToMany(() => Rating, r => r.user)
+    ratings!: Promise<Rating[]>;
 
 }

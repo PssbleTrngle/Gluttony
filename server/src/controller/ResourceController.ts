@@ -1,8 +1,9 @@
 import { BaseEntity, DeepPartial } from "typeorm";
 import { AuthRequest } from "..";
+import Api from "../Api";
 import Timestamps from "../models/Timestamps";
 import User from "../models/User";
-import Watched from "../models/Watched";
+import { debug, warn } from "../logging";
 
 export class HttpError extends Error {
     constructor(public status_code: number, message?: string) {
@@ -67,14 +68,18 @@ export default function <E extends IEntity>(Resource: EntityStatic<E>, owned: bo
 
         async save(req: AuthRequest) {
             const values: DeepPartial<typeof Resource>[] = Array.isArray(req.body) ? req.body : [req.body];
+
             const resources = Resource.create(values.map(v => ({ ...v, user: req.user })));
-            return Promise.all(resources.map(r => r.save())).then(() => 201);
+            return Promise.all(resources.map(r => r.save().catch(e => {
+                warn(e);
+            }))).then(() => 201);
         }
 
         async update(req: AuthRequest) {
             const entity = await Resource.findOne<IEntity>(req.params.id);
             await this.authorized(entity, req);
-            return Resource.getRepository().update(req.params.id, req.body)
+            Object.assign(entity, req.body);
+            return entity?.save();
         }
 
         async remove(req: AuthRequest) {
@@ -86,19 +91,43 @@ export default function <E extends IEntity>(Resource: EntityStatic<E>, owned: bo
         async removeMany(req: AuthRequest) {
             const { ids } = req.body;
 
-            const o = owned ? { user: req.user } : {}
-            //@ts-ignore
-            await Promise.all(ids.map(id => Watched.delete({ ...o, id })));
+            const query = Resource.createQueryBuilder()
+                .loadAllRelationIds()
+                .where(owned ? 'userId = :user' : {}, { user: req.user.id })
+                .andWhere(() => 'id IN (:...ids)', { ids })
+                .delete();
 
-            /*
-            await Resource.createQueryBuilder()
-                .where(owned ? { userId: req.user.id } : {})
-                .andWhere(() => 'id IN (:ids)', { ids })
-                .delete()
-                .execute();
-            */
+            //console.log(query.getQueryAndParameters());
+            await query.execute();
 
             return true;
+        }
+
+        async shows(req: AuthRequest) {
+
+            const resources: any[] = await Resource.createQueryBuilder()
+                .loadAllRelationIds()
+                .where(owned ? 'userId = :user' : {}, { user: req.user.id })
+                .groupBy('showID')
+                .select('showID')
+                .addSelect('COUNT(*) AS count')
+                .getRawMany();
+
+            return Promise.all(resources.map(({ showID, count }) =>
+                Api.getShow(showID).then(s => ({ ...s, count }))
+            ))
+        }
+
+        async forShow(req: AuthRequest) {
+            const { id } = req.params;
+            const single = req.query.single === 'true';
+
+            const resources = await Resource.find({
+                where: { showID: id, user: req.user }
+            });
+
+            if (single) return resources[0];
+            return resources;
         }
 
     }
