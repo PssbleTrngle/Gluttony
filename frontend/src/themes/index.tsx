@@ -1,50 +1,29 @@
-import { css, CSSInterpolation } from '@emotion/css'
-import { createContext, Dispatch, FC, SetStateAction, useContext, useMemo, useState } from 'react'
+import { CSSInterpolation } from '@emotion/css'
+import { css, SerializedStyles, Theme, ThemeProvider as EmotionThemeProvider, useTheme } from '@emotion/react'
+import { FC, useMemo, useState } from 'react'
+import dark from './dark'
 
-export interface Theme {
-   bg: string
-   primary: string
-   secondary: string
-   text: string
-}
-
-const themes = new Map<string, Theme>()
-
-export function createTheme(key: string, theme: Theme) {
-   themes.set(key, theme)
-}
-
-export function getTheme(key: string) {
-   const theme = themes.get(key)
-   if (theme) return theme
-   else throw new Error(`Theme '${key}' not found`)
-}
-
-export function getThemes() {
-   return themes.keys()
-}
-
-require("./dark")
-
-export const DEFAULT = getTheme('dark')
-
-const ThemeContext = createContext<[Theme, Dispatch<SetStateAction<Theme>>]>([DEFAULT, () => { }])
-
-export function useTheme() {
-   return useContext(ThemeContext)
-}
-
-export function useStyles(style: (t: Theme) => CSSInterpolation) {
-   const [theme] = useTheme()
-   return useMemo(() => css(style(theme)), [theme, style])
-}
+const themes: Record<string, Partial<Theme> | undefined> = { dark }
 
 export const ThemeProvider: FC = ({ children }) => {
    const saved = localStorage.getItem('theme')
-   const initial = getTheme((saved && themes.has(saved)) ? saved : 'dark')
-   const theme = useState(initial)
+   const [theme] = useState(themes[saved ?? ''] ?? {})
 
-   return <ThemeContext.Provider value={theme}>
-      {children}
-   </ThemeContext.Provider>
+   return <EmotionThemeProvider theme={dark} >
+      <EmotionThemeProvider theme={def => ({ ...def, ...theme })} >
+         {children}
+      </EmotionThemeProvider>
+   </EmotionThemeProvider>
+}
+
+export function useStyle(style: (t: Theme) => CSSInterpolation) {
+   const theme = useTheme()
+   return useMemo(() => css(style(theme)), [theme, style])
+}
+
+export function useStyles<K extends string>(styles: (t: Theme) => Record<K, CSSInterpolation>) {
+   const theme = useTheme()
+   return useMemo(() => Object.entries(styles(theme)).reduce(
+      (o, [key, style]) => ({ ...o, [key]: css(style as SerializedStyles) }), {} as Record<K, string>
+   ), [theme, styles])
 }

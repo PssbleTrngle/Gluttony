@@ -1,9 +1,15 @@
 import { FC } from "react";
+import { Link } from "react-router-dom";
+import { AppStatus } from "../api/Api";
+import { useUser } from "../api/hooks";
+import { useStatus } from "../api/status";
 
 const Home: FC = () => {
-   return <>
-      <h1>Welcome!</h1>
-   </>
+   const user = useUser()
+   const status = useStatus()
+
+   if(status === AppStatus.LOGGED_IN) return <p>Welcome {user?.username}!</p>
+   else return <Link to='/login'>Login</Link>
 }
 
 export default Home

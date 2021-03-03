@@ -9,7 +9,7 @@ export function useStatus() {
 
 export const StatusProvider: FC = ({children}) => {
   const [status, setStatus] = useState<AppStatus>(AppStatus.LOADING)
-  useEffect(() => API.subscribe(setStatus), [])
+  useEffect(() => API.subscribe('status', setStatus), [])
 
   return <StatusContext.Provider value={status}>
      {children}

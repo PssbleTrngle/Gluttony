@@ -1,6 +1,7 @@
 import { config, Promise } from 'bluebird'
 import React, { useEffect, useMemo, useState } from 'react'
 import API from './Api'
+import { IUser } from './models'
 config({ cancellation: true })
 
 export function useApi<M>(endpoint: string, query: Record<string, any> = {}) {
@@ -8,15 +9,16 @@ export function useApi<M>(endpoint: string, query: Record<string, any> = {}) {
    const [loading, setLoading] = useState(true)
    const [error, setError] = useState<string | null>()
 
+   const url = API.appendQuery(endpoint, query)
    const update = useMemo(
       () => () => {
          setError(null)
-         return Promise.resolve<M>(API.get<M>(endpoint, query))
+         return Promise.resolve<M>(API.get<M>(url))
             .then(m => setData(m))
             .catch(e => setError(e.message))
             .then(() => setLoading(false))
       },
-      [endpoint, query]
+      [url]
    )
 
    useEffect(() => {
@@ -27,12 +29,12 @@ export function useApi<M>(endpoint: string, query: Record<string, any> = {}) {
    return [data, loading, error, update] as [M | undefined, boolean, string | null, () => void]
 }
 
-export function useSubmit<R>(endpoint: string, body?: Record<string, any>, method: 'POST' | 'PUT' | 'DELETE' = 'POST', onSuccess = (r: R) => {}) {
+export function useSubmit<R>(endpoint: string, body?: Record<string, any>, method: 'POST' | 'PUT' | 'DELETE' = 'POST', onSuccess = (r: R) => { }) {
    const [error, setError] = useState<Error>()
    const [result, setResult] = useState<R>()
    const [loading, setLoading] = useState(false)
 
-   const onSubmit = (e?: React.FormEvent) => {
+   const send = (e?: React.FormEvent) => {
       setLoading(true)
       setResult(undefined)
       setError(undefined)
@@ -47,7 +49,7 @@ export function useSubmit<R>(endpoint: string, body?: Record<string, any>, metho
          .then(() => setLoading(false))
    }
 
-   return { onSubmit, result, error, loading, success: !!result }
+   return { send, result, error, loading, success: !!result }
 }
 
 export function useEvent<K extends keyof WindowEventMap>(type: K, listener: (event: WindowEventMap[K]) => any, options?: boolean | AddEventListenerOptions) {
@@ -55,4 +57,10 @@ export function useEvent<K extends keyof WindowEventMap>(type: K, listener: (eve
       window.addEventListener(type, listener, options)
       return () => window.removeEventListener(type, listener, options)
    }, [type, listener, options])
+}
+
+export function useUser() {
+   const [user, setUser] = useState<IUser>()
+   useEffect(() => API.subscribe('user', setUser), [])
+   return user
 }

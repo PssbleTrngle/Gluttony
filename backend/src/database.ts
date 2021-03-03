@@ -20,7 +20,7 @@ export async function checkAdminUser() {
 }
 
 export default async () => {
-   const db = await createConnection({ ...config.database })
+   const db = await createConnection(config.database)
    await checkAdminUser()
    return db
 }

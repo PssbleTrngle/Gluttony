@@ -1,4 +1,4 @@
-import { BaseEntity } from 'typeorm'
+import { BaseEntity, DeepPartial } from 'typeorm'
 
 const KEY = Symbol('format')
 
@@ -6,15 +6,11 @@ export default function () {
    return Reflect.metadata(KEY, true)
 }
 
-export function stripHidden<E extends BaseEntity>(target: E): Partial<E> {
-   const hiddenFields = Object.keys(target)
-      .filter(key => Reflect.getMetadata(KEY, target, key))
-      .map(k => k as keyof E)
+export function stripHidden<E extends BaseEntity>(target: E): DeepPartial<E> {
+   const hiddenFields = Object.keys(target).filter(key => Reflect.getMetadata(KEY, target, key))
 
-   const cloned = { ...target }
-   hiddenFields.forEach(key => {
-      delete cloned[key]
-   })
-
-   return cloned
+   return Object.entries(target)
+      .filter(([key]) => !hiddenFields.includes(key))
+      .map(([key, value]) => [key, value instanceof BaseEntity ? stripHidden(value) : value])
+      .reduce((o, [key, value]) => ({ ...o, [key]: value }), {})
 }

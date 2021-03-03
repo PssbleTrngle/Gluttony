@@ -1,8 +1,10 @@
-import { createTheme } from ".";
+import { Theme } from "@emotion/react"
 
-createTheme('dark', {
+const dark: Theme = {
    bg: '#000',
-   primary: '#F00',
+   primary: '#9964f5',
    secondary: '#DDD',
    text: '#FFF',
-})
+}
+
+export default dark

@@ -24,8 +24,8 @@ export default (app: Application) => {
       res.status(200).end()
    })
 
-   router.use('/auth', auth())
-   router.use('/token', token())
+   auth(router)
+   token(router)
 
    router.use('*', (_req, _res, next) => next(new NotFoundError()))
 
@@ -35,5 +35,5 @@ export default (app: Application) => {
       app.get('*', (_, res) => res.sendFile(join(dir, 'index.html')))
    }
 
-   app.use(error())
+   error(app)
 }

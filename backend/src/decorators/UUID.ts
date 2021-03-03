@@ -1,3 +1,3 @@
-import { PrimaryColumn } from 'typeorm'
+import { PrimaryGeneratedColumn } from 'typeorm'
 
-export default () => PrimaryColumn({ default: 'public.uuid_generate_v4()' })
+export default () => PrimaryGeneratedColumn('uuid')

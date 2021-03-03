@@ -1,12 +1,13 @@
 import { celebrate, Joi } from 'celebrate'
-import { Router } from 'express'
+import { IRouter, Router } from 'express'
 import { BaseEntity, Like } from 'typeorm'
 import { wrapAuth } from '../middleware/wrapper'
 
 export type StaticEntity<E extends BaseEntity> = typeof BaseEntity & { new (): E }
 
-export default <E extends BaseEntity>(Model: StaticEntity<E>) => {
+export default <E extends BaseEntity>(Model: StaticEntity<E>, path?: string) => (app: IRouter) => {
    const router = Router()
+   app.use(path ?? `/${Model.name}`, router)
 
    router.get(
       '/',
@@ -35,6 +36,4 @@ export default <E extends BaseEntity>(Model: StaticEntity<E>) => {
       }),
       wrapAuth(async req => Model.findOne(Number.parseInt(req.params.id)))
    )
-
-   return router
 }

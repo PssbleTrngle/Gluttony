@@ -1,5 +1,6 @@
 import bodyParser from 'body-parser'
 import chalk from 'chalk'
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
 import config from './config'
@@ -14,6 +15,7 @@ async function run() {
    app.use(cors())
    app.use(bodyParser.json())
    app.use(bodyParser.urlencoded({ extended: true }))
+   app.use(cookieParser())
 
    routes(app)
 

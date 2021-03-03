@@ -17,20 +17,21 @@ const integer = (s?: string) => {
    return isNaN(n) ? undefined : n
 }
 
+const files = (folder: string) => [`${resolve(__dirname, folder)}/**.ts`, `${resolve(__dirname, folder)}/**.js`]
+
 const database: ConnectionOptions = {
    synchronize: env.DATABASE_SYNC === 'true',
    host: env.DATABASE_HOST,
    port: integer(env.DATABASE_PORT) ?? 5432,
-   database: env.DATABASE_NAME ?? 'calender',
-   username: env.DATABASE_USER ?? env.DATABASE_NAME ?? 'calender',
+   database: env.DATABASE_NAME ?? 'gluttony',
+   username: env.DATABASE_USER ?? env.DATABASE_NAME ?? 'gluttony',
    password: env.DATABASE_PASS,
    logging: env.DATABASE_LOGGING === 'true',
    type: 'postgres',
-   uuidExtension: 'uuid-ossp',
-   entities: [`${resolve(__dirname, 'models')}/**.{js,ts}`],
-   migrations: [`${resolve(__dirname, 'migrations')}/**.{js,ts}`],
+   entities: files('models'),
+   //migrations: files('migrations'),
    cli: {
-      migrationsDir: resolve(__dirname, 'migrations'),
+      //migrationsDir: resolve(__dirname, 'migrations'),
    },
 }
 
