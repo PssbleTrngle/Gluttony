@@ -1,25 +1,17 @@
 /** @jsxImportSource @emotion/react */
-import { ButtonHTMLAttributes, FC } from "react";
-import { useStyle } from "../themes";
+import styled from "@emotion/styled";
 
-export const Button: FC<ButtonHTMLAttributes<HTMLButtonElement> & {
-   secondary?: boolean
+interface ButtonProps {
    square?: boolean
-}> = ({ children, secondary, square, ...props }) => {
-
-   const style = useStyle(({ primary }) => `
-      padding: 0.4rem;
-      border-radius: ${square ? undefined : '999px'};
-      background: ${primary};
-
-      &:disabled {
-         background: #444;
-         color: #CCC;
-      }
-   `)
-
-   return <button css={style} {...props}>
-      {children}
-   </button>
-
+   secondary?: boolean
 }
+export const Button = styled.button<ButtonProps>`
+   padding: 0.4rem;
+   border-radius: ${p => p.square ? undefined : '999px'};
+   background: ${p => p.theme.primary};
+
+   &:disabled {
+      background: #444;
+      color: #CCC;
+   }
+`

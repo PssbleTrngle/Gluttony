@@ -5,7 +5,7 @@ import NotFoundError from '../error/NotFoundError'
 import UnauthorizedError from '../error/UnauthorizedError'
 import authenticate from '../middleware/authenticate'
 import Token from '../models/Token'
-import User, { UserRole } from '../models/User'
+import User from '../models/User'
 
 export type RequestHandler<R extends Request = Request> = (req: R, res: Response, next: NextFunction) => unknown
 export type ErrorRequestHandler = (error: Error, req: Request, res: Response, next: NextFunction) => unknown
@@ -30,7 +30,7 @@ export function wrap(func: RequestHandler) {
    }) as RequestHandler
 }
 
-export function wrapAuth(func: RequestHandler<AuthRequest>, validate: (user: User) => boolean = u => u.role === UserRole.ADMIN) {
+export function wrapAuth(func: RequestHandler<AuthRequest>, validate: (user: User) => boolean = () => true) {
    return wrap(async (req: Request, res: Response, next: NextFunction) => {
       if (req.authError) throw req.authError
       if (!req.user || !validate(req.user)) throw new UnauthorizedError()

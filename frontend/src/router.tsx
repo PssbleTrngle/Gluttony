@@ -4,6 +4,7 @@ import { AppStatus } from "./api/Api";
 import Home from "./views/Home";
 import Login from "./views/Login";
 import Logout from "./views/Logout";
+import Profile from "./views/Profile";
 import Tokens from "./views/Tokens";
 
 const redirect = (to: string) => () => <Redirect to={to} />
@@ -32,9 +33,13 @@ const routes: Record<AppStatus, RouteConfig[]> = {
       component: Tokens,
     },
     {
+      path: '/profile',
+      component: Profile,
+    },
+    {
       path: '/',
       exact: true,
-      component: redirect('/tokens'),
+      component: redirect('/profile'),
     },
     ...ONLINE
   ],

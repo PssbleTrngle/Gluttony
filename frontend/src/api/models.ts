@@ -11,6 +11,7 @@ export interface IUser extends IModel {
    timestamps: ITimestamps
    username: string
    email?: string
+   emailVerified?: boolean
 }
 
 export interface IToken extends IModel {

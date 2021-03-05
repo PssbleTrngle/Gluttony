@@ -31,6 +31,10 @@ class Api extends EventBus<{
       this.refresh().catch(() =>
          this.emit('status', AppStatus.LOGGED_OUT)
       )
+
+      const stored = localStorage.getItem('user')
+      if (stored) this.emit('user', JSON.parse(stored))
+      this.subscribe('user', u => localStorage.setItem('user', JSON.stringify(u)), false)
    }
 
    private setToken(token: string) {

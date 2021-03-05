@@ -1,5 +1,4 @@
-import { CSSInterpolation } from '@emotion/css'
-import { css, SerializedStyles, Theme, ThemeProvider as EmotionThemeProvider, useTheme } from '@emotion/react'
+import { css, Theme, ThemeProvider as EmotionThemeProvider, useTheme } from '@emotion/react'
 import { FC, useMemo, useState } from 'react'
 import dark from './dark'
 
@@ -16,14 +15,21 @@ export const ThemeProvider: FC = ({ children }) => {
    </EmotionThemeProvider>
 }
 
-export function useStyle(style: (t: Theme) => CSSInterpolation) {
+type V = string | undefined
+export function useStyle(template: TemplateStringsArray, ...args: Array<V | ((t: Theme) => V)>) {
    const theme = useTheme()
-   return useMemo(() => css(style(theme)), [theme, style])
+   return useMemo(() => css(
+         template, ...args.map(a => 
+            typeof a === 'string' ? a : a?.(theme)   
+         )
+   ), [theme, template, args])
 }
 
+/*
 export function useStyles<K extends string>(styles: (t: Theme) => Record<K, CSSInterpolation>) {
    const theme = useTheme()
    return useMemo(() => Object.entries(styles(theme)).reduce(
       (o, [key, style]) => ({ ...o, [key]: css(style as SerializedStyles) }), {} as Record<K, string>
    ), [theme, styles])
 }
+*/

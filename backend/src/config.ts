@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import { resolve } from 'path'
-import { ConnectionOptions } from 'typeorm'
+import { ConnectionOptions } from 'typeorm-seeding'
 
 dotenv.config()
 
@@ -29,6 +29,8 @@ const database: ConnectionOptions = {
    logging: env.DATABASE_LOGGING === 'true',
    type: 'postgres',
    entities: files('models'),
+   seeds: files('seeder/seeds'),
+   factories: files('seeder/factories'),
    //migrations: files('migrations'),
    cli: {
       //migrationsDir: resolve(__dirname, 'migrations'),

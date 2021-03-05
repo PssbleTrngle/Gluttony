@@ -26,6 +26,9 @@ export default class User extends BaseEntity {
    @Column({ unique: true, nullable: true })
    email?: string
 
+   @Column({ default: false })
+   emailVerified!: boolean
+
    @Hidden()
    @Column()
    password!: string
@@ -37,7 +40,7 @@ export default class User extends BaseEntity {
    @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
    role!: UserRole
 
-   @OneToMany(() => Token, t => t.user)
+   @OneToMany(() => Token, t => t.user, { cascade: true })
    tokens!: Promise<Partial<Token>[]>
 
    @BeforeInsert()

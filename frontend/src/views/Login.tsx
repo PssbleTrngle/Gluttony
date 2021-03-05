@@ -1,10 +1,16 @@
-import { FC, FormEvent, useCallback, useState } from "react";
+import { FC, FormEvent, useCallback, useEffect, useState } from "react";
 import API from "../api/Api";
+import { useUser } from "../api/hooks";
 
 const Login: FC = () => {
+   const user = useUser()
    const [username, setUsername] = useState('')
    const [password, setPassword] = useState('')
    const [error, setError] = useState<Error>()
+   
+   useEffect(() => {
+      if(user) setUsername(user.username)
+   }, [user])
 
    const login = useCallback((e: FormEvent) => {
       e.preventDefault()
