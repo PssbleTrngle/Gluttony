@@ -1,55 +1,79 @@
 import { config, Promise } from 'bluebird'
-import React, { useEffect, useMemo, useState } from 'react'
-import API from './Api'
-import { IUser } from './models'
+import querystring from 'query-string'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import Cookies from 'universal-cookie'
+import ApiError from './ApiError'
+import { AppStatus } from './models'
+import { useStatus } from './status'
 config({ cancellation: true })
+
+const baseURL = '/api'
+export const cookies = new Cookies()
+
+async function request<T>(method: string, endpoint: string, body?: string, token?: string) {
+   const url = `${baseURL}/${endpoint}`
+   console.count(url)
+
+   const response = await fetch(url, {
+      method, body, headers: {
+         Authorization: token ? `Bearer ${token}` : '',
+         'Content-Type': 'application/json'
+      }
+   })
+
+   const json = await response.json().catch(() => null)
+
+   if (!response.ok) throw new ApiError(json?.error?.message ?? 'An error occures', response.status)
+
+   return json as T
+}
 
 export function useApi<M>(endpoint: string, query: Record<string, any> = {}) {
    const [data, setData] = useState<M | undefined>()
-   const [loading, setLoading] = useState(true)
-   const [error, setError] = useState<string | null>()
+   
+   const url = useMemo(() => {
+      const q = Object.keys(query).length > 0 ? '?' + querystring.stringify(query) : ''
+      return endpoint + q
+   }, [endpoint, query])
 
-   const url = API.appendQuery(endpoint, query)
-   const update = useMemo(
-      () => () => {
-         setError(null)
-         return Promise.resolve<M>(API.get<M>(url))
-            .then(m => setData(m))
-            .catch(e => setError(e.message))
-            .then(() => setLoading(false))
-      },
-      [url]
-   )
+   const { send, error, loading } = useRequest('GET', url, undefined, setData)
 
    useEffect(() => {
-      const promise = update()
+      const promise = send()
       return () => promise.cancel()
-   }, [update])
+   }, [send])
 
-   return [data, loading, error, update] as [M | undefined, boolean, string | null, () => void]
+   return [data, loading, error, send] as [M | undefined, boolean, Error | undefined, () => void]
 }
 
-export function useSubmit<R>(endpoint: string, body?: Record<string, any>, method: 'POST' | 'PUT' | 'DELETE' = 'POST', onSuccess = (r: R) => { }) {
+type Method = 'POST' | 'PUT' | 'DELETE' | 'GET' | 'HEAD'
+export function useRequest<R>(method: Method, endpoint: string, body?: Record<string, any>, onSuccess?: (r: R) => unknown) {
    const [error, setError] = useState<Error>()
-   const [result, setResult] = useState<R>()
    const [loading, setLoading] = useState(false)
+   const [, setStatus] = useStatus()
 
-   const send = (e?: React.FormEvent) => {
+   const encodedBody = body ? JSON.stringify(body) : undefined
+
+   const send = useCallback((e?: React.FormEvent) => {
       setLoading(true)
-      setResult(undefined)
       setError(undefined)
       e?.preventDefault()
-      const data = typeof body === 'function' ? body() : body
-      API.request<R>(method, endpoint, data)
-         .then(r => {
-            setResult(r)
-            onSuccess(r)
-         })
-         .catch(e => setError({ ...e, message: e.message }))
-         .then(() => setLoading(false))
-   }
 
-   return { send, result, error, loading, success: !!result }
+      return Promise.resolve<void>(
+         request<R>(method, endpoint, encodedBody)
+            .then(r => onSuccess?.(r))
+            .then(() => cookies.get('refresh-token') ? AppStatus.LOGGED_IN : AppStatus.LOGGED_OUT)
+            .catch(e => {
+               setError(e)
+               return e.status === 400 ? AppStatus.LOGGED_OUT : AppStatus.OFFLINE
+            })
+            .then(s => setStatus(s))
+            .then(() => setLoading(false))
+
+      )
+   }, [encodedBody, method, endpoint, onSuccess, setStatus])
+
+   return { send, error, loading }
 }
 
 export function useEvent<K extends keyof WindowEventMap>(type: K, listener: (event: WindowEventMap[K]) => any, options?: boolean | AddEventListenerOptions) {
@@ -57,10 +81,4 @@ export function useEvent<K extends keyof WindowEventMap>(type: K, listener: (eve
       window.addEventListener(type, listener, options)
       return () => window.removeEventListener(type, listener, options)
    }, [type, listener, options])
-}
-
-export function useUser() {
-   const [user, setUser] = useState<IUser>()
-   useEffect(() => API.subscribe('user', setUser), [])
-   return user
 }

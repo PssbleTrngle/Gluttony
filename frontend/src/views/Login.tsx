@@ -1,21 +1,11 @@
-import { FC, FormEvent, useCallback, useEffect, useState } from "react";
-import API from "../api/Api";
-import { useUser } from "../api/hooks";
+import { FC, useState } from "react";
+import { useLogin, useUser } from "../api/session";
 
 const Login: FC = () => {
    const user = useUser()
-   const [username, setUsername] = useState('')
+   const [username, setUsername] = useState(user?.username ?? '')
    const [password, setPassword] = useState('')
-   const [error, setError] = useState<Error>()
-   
-   useEffect(() => {
-      if(user) setUsername(user.username)
-   }, [user])
-
-   const login = useCallback((e: FormEvent) => {
-      e.preventDefault()
-      API.login(username, password).catch(setError)
-   }, [username, password])
+   const { error, login } = useLogin(username, password)
 
    return <form onSubmit={login}>
       {error && <p>{error.message}</p>}

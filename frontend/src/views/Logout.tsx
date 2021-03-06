@@ -1,11 +1,12 @@
 import { FC, useEffect } from "react";
-import API from "../api/Api";
+import { useRequest } from "../api/hooks";
 
 const Logout: FC = () => {
 
+   const { send } = useRequest('DELETE', 'auth')
+
    useEffect(() => {
-      API.delete('auth')
-         .catch(e => console.error(e))
+      send()
    })
 
    return <p>Logging out...</p>

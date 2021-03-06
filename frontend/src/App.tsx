@@ -3,6 +3,7 @@ import { css, Theme } from '@emotion/react';
 import { FC } from 'react';
 import { renderRoutes } from "react-router-config";
 import { BrowserRouter as Router } from 'react-router-dom';
+import { SessionProvider } from './api/session';
 import { StatusProvider, useStatus } from './api/status';
 import StatusBanner from './components/StatusBanner';
 import routes from './router';
@@ -15,7 +16,7 @@ const App: FC = () => (
 )
 
 const Container: FC = () => {
-  const status = useStatus()
+  const [status] = useStatus()
 
   const style = (t: Theme) => css`
       background: ${t.bg};
@@ -38,9 +39,11 @@ const Container: FC = () => {
 
 const Providers: FC = ({ children }) => (
   <StatusProvider>
-    <ThemeProvider>
-      {children}
-    </ThemeProvider>
+    <SessionProvider>
+      <ThemeProvider>
+        {children}
+      </ThemeProvider>
+    </SessionProvider>
   </StatusProvider>
 )
 

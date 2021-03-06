@@ -4,7 +4,7 @@ import styled from '@emotion/styled';
 import { DateTime } from 'luxon';
 import { transparentize } from "polished";
 import { FC, Fragment } from "react";
-import { useApi, useSubmit } from "../api/hooks";
+import { useApi, useRequest } from "../api/hooks";
 import { IToken } from "../api/models";
 import { Button } from '../components/Inputs';
 import { Title } from '../components/Text';
@@ -49,7 +49,7 @@ const Token: FC<IToken> = ({ id, reason, timestamps, active }) => {
       }
    `
 
-   const remove = useSubmit(`token/${id}`, {}, 'DELETE')
+   const remove = useRequest('DELETE', `token/${id}`)
 
    return <li css={style}>
       <span>{reason}</span>

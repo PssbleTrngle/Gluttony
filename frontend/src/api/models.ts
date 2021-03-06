@@ -26,3 +26,10 @@ export interface ITokens {
    refresh_token: string
    access_token: string
 }
+
+export enum AppStatus {
+   LOGGED_IN = 'logged in',
+   LOGGED_OUT = 'logged out',
+   OFFLINE = 'offline',
+   LOADING = 'loading',
+}

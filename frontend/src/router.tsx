@@ -1,6 +1,6 @@
 import { RouteConfig } from "react-router-config";
 import { Redirect } from "react-router-dom";
-import { AppStatus } from "./api/Api";
+import { AppStatus } from "./api/models";
 import Home from "./views/Home";
 import Login from "./views/Login";
 import Logout from "./views/Logout";

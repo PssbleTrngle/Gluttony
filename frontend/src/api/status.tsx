@@ -1,17 +1,18 @@
-import { createContext, FC, useContext, useEffect, useState } from "react";
-import API, { AppStatus } from "./Api";
+import { createContext, Dispatch, FC, SetStateAction, useContext, useState } from "react";
+import { AppStatus } from "./models";
 
-const StatusContext = createContext<AppStatus>(AppStatus.OFFLINE)
+const StatusContext = createContext<[AppStatus, Dispatch<SetStateAction<AppStatus>>]>(
+   [AppStatus.OFFLINE, () => console.warn('Trying to use status outside of provider')]
+)
 
 export function useStatus() {
    return useContext(StatusContext)
 }
 
-export const StatusProvider: FC = ({children}) => {
-  const [status, setStatus] = useState<AppStatus>(AppStatus.LOADING)
-  useEffect(() => API.subscribe('status', setStatus), [])
+export const StatusProvider: FC = ({ children }) => {
+   const status = useState<AppStatus>(AppStatus.LOADING)
 
-  return <StatusContext.Provider value={status}>
-     {children}
-  </StatusContext.Provider>
+   return <StatusContext.Provider value={status}>
+      {children}
+   </StatusContext.Provider>
 }

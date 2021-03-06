@@ -4,8 +4,9 @@ import styled from '@emotion/styled';
 import { DateTime } from 'luxon';
 import { transparentize } from 'polished';
 import { FC } from "react";
-import { useSubmit, useUser } from "../api/hooks";
+import { useRequest } from "../api/hooks";
 import { IUser } from "../api/models";
+import { useUser } from '../api/session';
 import { LinkButton } from '../components/Link';
 import { Title } from '../components/Text';
 
@@ -41,7 +42,7 @@ const Info: FC<IUser> = ({ timestamps, username, email, emailVerified }) => {
       }
    `
 
-   const reset = useSubmit('auth/reset')
+   const reset = useRequest('POST', 'auth/reset')
 
    return <div css={style}>
       <Panel>
