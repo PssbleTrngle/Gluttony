@@ -3,13 +3,13 @@ FROM node:12.13.0 as build
 WORKDIR /app
 
 # Install dependencies
-COPY package*.json ./
-RUN npm install --no-audit
+COPY package.json yarn.lock ./
+RUN yarn install
 
 # Build application
 COPY src ./src/
 COPY public ./public/
-COPY vue.config.js tsconfig.json babel.config.js .browserslistrc .eslintrc.js ./
+COPY tsconfig.json ./
 RUN npm run build
 
 # Serve enviroment
