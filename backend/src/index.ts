@@ -3,12 +3,13 @@ import chalk from 'chalk'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
+import api from './api'
 import config from './config'
 import database from './database'
 import routes from './routes'
 
 async function run() {
-   await database()
+   await Promise.all([database(), api.login()])
 
    const app = express()
 

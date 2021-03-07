@@ -1,11 +1,11 @@
-import Token from '../../models/Token'
+import Session from '../../models/Session'
 import User from '../../models/User'
 
 declare global {
    namespace Express {
       export interface Request {
          user?: User
-         token?: Token
+         session?: Session
          authError?: Error
       }
    }

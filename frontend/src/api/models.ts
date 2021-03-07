@@ -10,11 +10,13 @@ export interface ITimestamps {
 export interface IUser extends IModel {
    timestamps: ITimestamps
    username: string
-   email?: string
-   emailVerified?: boolean
+   credentials?: {
+      email?: string
+   }
+   verified?: boolean
 }
 
-export interface IToken extends IModel {
+export interface ISession extends IModel {
    timestamps: ITimestamps
    expires_at: string
    user: IUser

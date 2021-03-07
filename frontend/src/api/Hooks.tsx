@@ -30,7 +30,7 @@ async function request<T>(method: string, endpoint: string, body?: string, token
 
 export function useApi<M>(endpoint: string, query: Record<string, any> = {}) {
    const [data, setData] = useState<M | undefined>()
-   
+
    const url = useMemo(() => {
       const q = Object.keys(query).length > 0 ? '?' + querystring.stringify(query) : ''
       return endpoint + q
@@ -65,9 +65,11 @@ export function useRequest<R>(method: Method, endpoint: string, body?: Record<st
             .then(() => cookies.get('refresh-token') ? AppStatus.LOGGED_IN : AppStatus.LOGGED_OUT)
             .catch(e => {
                setError(e)
-               return e.status === 400 ? AppStatus.LOGGED_OUT : AppStatus.OFFLINE
+               if(e.status === 500) return AppStatus.OFFLINE
             })
-            .then(s => setStatus(s))
+            .then(s => {
+               if (s) setStatus(s)
+            })
             .then(() => setLoading(false))
 
       )

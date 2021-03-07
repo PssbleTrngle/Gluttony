@@ -6,7 +6,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { SessionProvider } from './api/session';
 import { StatusProvider, useStatus } from './api/status';
 import StatusBanner from './components/StatusBanner';
-import routes from './router';
+import routes from './routes';
 import { ThemeProvider } from './themes';
 
 const App: FC = () => (

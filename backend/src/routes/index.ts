@@ -4,7 +4,8 @@ import config from '../config'
 import NotFoundError from '../error/NotFoundError'
 import auth from './auth'
 import error from './error'
-import token from './token'
+import token from './session'
+import show from './show'
 
 export default (app: Application) => {
    const router = Router()
@@ -26,6 +27,7 @@ export default (app: Application) => {
 
    auth(router)
    token(router)
+   show(router)
 
    router.use('*', (_req, _res, next) => next(new NotFoundError()))
 

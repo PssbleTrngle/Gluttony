@@ -1,8 +1,9 @@
 import { detect } from "detect-browser";
 import { decode } from "jsonwebtoken";
 import { createContext, Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import ApiError from "./ApiError";
 import { useRequest } from "./hooks";
-import { ITokens, IUser } from "./models";
+import { AppStatus, ITokens, IUser } from "./models";
 import { useStatus } from "./status";
 
 interface Session {
@@ -49,11 +50,17 @@ export const SessionProvider: FC = ({ children }) => {
       setSession({ token, user: data?.user })
    }, [setSession])
 
-   const refresh = useRequest<ITokens>('POST', 'auth/refresh', undefined, t => setToken(t.access_token))
+   const {send: refresh, error} = useRequest<ITokens>('POST', 'auth/refresh', undefined, t => setToken(t.access_token))
 
    useEffect(() => {
-      refresh.send()
+      refresh()
    }, [])
+
+   useEffect(() => {
+      if(error instanceof ApiError && error.status === 400) {
+         setStatus(AppStatus.LOGGED_OUT)
+      }
+   }, [error])
 
    return <CONTEXT.Provider value={[session, setSession]}>
       {children}

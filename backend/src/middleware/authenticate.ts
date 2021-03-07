@@ -3,23 +3,23 @@ import { verify } from 'jsonwebtoken'
 import config from '../config'
 import BadRequestError from '../error/BadRequestError'
 import UnauthorizedError from '../error/UnauthorizedError'
-import Token from '../models/Token'
+import Session from '../models/Session'
 
 const { jwt } = config.auth
 
 export default async (req: Request, _: unknown, next: NextFunction) => {
    try {
-      req.token = await authenticate(req)
-      req.user = req.token.user
+      req.session = await authenticate(req)
+      req.user = req.session.user
       next()
    } catch (e) {
       next(e)
    }
 }
 
-interface TokenData {
-   token: { id: string }
+export interface TokenData {
    user: { id: number }
+   token: { id: number }
 }
 
 function decodeJWT(token: string, secret: string) {
@@ -38,8 +38,8 @@ export async function authenticate(req: Request) {
 
    const decoded = decodeJWT(access_token, jwt.access_secret)
 
-   const token = await Token.findOne(decoded.token.id)
-   if (!token) throw new BadRequestError('Invalid session')
+   const session = await Session.findOne(decoded.token.id)
+   if (!session) throw new BadRequestError('Invalid session')
 
-   return token
+   return session
 }

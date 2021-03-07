@@ -4,20 +4,20 @@ import { BaseEntity } from 'typeorm'
 import { stripHidden } from '../decorators/Hidden'
 import BadRequestError from '../error/BadRequestError'
 import { wrapAuth } from '../middleware/wrapper'
-import Token from '../models/Token'
-import { TOKEN_COOKIE } from './auth'
+import Session from '../models/Session'
+import { SESSION_COOKIE } from './auth'
 
 export type StaticEntity<E extends BaseEntity> = typeof BaseEntity & { new (): E }
 
 export default (app: IRouter) => {
    const router = Router()
-   app.use('/token', router)
+   app.use('/session', router)
 
    router.get(
       '/',
       wrapAuth(async req => {
-         const tokens = await Token.find({ user: req.user })
-         return tokens.map(t => ({ ...stripHidden(t), active: req.token.id === t.id }))
+         const sessions = await Session.find({ user: req.user })
+         return sessions.map(t => ({ ...stripHidden(t), active: req.session.id === t.id }))
       })
    )
 
@@ -29,12 +29,12 @@ export default (app: IRouter) => {
          },
       }),
       wrapAuth(async req => {
-         const token = await Token.findOne(req.params.id)
+         const session = await Session.findOne(req.params.id)
 
-         if (!token) return null
-         if (token.refresh_token === req.cookies[TOKEN_COOKIE]) throw new BadRequestError('Cannot delete token in use')
+         if (!session) return null
+         if (session.refresh_token === req.cookies[SESSION_COOKIE]) throw new BadRequestError('Cannot delete token in use')
 
-         await token.remove()
+         await session.remove()
          return true
       })
    )

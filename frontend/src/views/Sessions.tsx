@@ -5,12 +5,12 @@ import { DateTime } from 'luxon';
 import { transparentize } from "polished";
 import { FC, Fragment } from "react";
 import { useApi, useRequest } from "../api/hooks";
-import { IToken } from "../api/models";
+import { ISession } from "../api/models";
 import { Button } from '../components/Inputs';
 import { Title } from '../components/Text';
 
-const Tokens: FC = () => {
-   const [tokens] = useApi<IToken[]>('token')
+const Sessions: FC = () => {
+   const [sessions] = useApi<ISession[]>('token')
 
    const style = css`
       padding: 10px;
@@ -20,10 +20,10 @@ const Tokens: FC = () => {
    return <>
       <Title>Your logins</Title>
       <ul css={style}>
-         {tokens?.map((token, i) =>
+         {sessions?.map((token, i) =>
             <Fragment key={token.id}>
                <Token  {...token} />
-               {i < tokens.length - 1 &&
+               {i < sessions.length - 1 &&
                   <Line />
                }
             </Fragment>
@@ -32,7 +32,7 @@ const Tokens: FC = () => {
    </>
 }
 
-const Token: FC<IToken> = ({ id, reason, timestamps, active }) => {
+const Token: FC<ISession> = ({ id, reason, timestamps, active }) => {
 
    const style = (t: Theme) => css`
       padding: 1rem;
@@ -65,4 +65,4 @@ const Line = styled.div`
    margin: 0.6rem 1rem;
 `
 
-export default Tokens
+export default Sessions

@@ -5,14 +5,14 @@ import Timestamps from './Timestamps'
 import User from './User'
 
 @Entity()
-export default class Token extends BaseEntity {
+export default class Session extends BaseEntity {
    @UUID()
    id!: string
 
    @Column(() => Timestamps)
    timestamps!: Timestamps
 
-   @ManyToOne(() => User, u => u.tokens, { eager: true, onDelete: 'CASCADE' })
+   @ManyToOne(() => User, u => u.sessions, { eager: true, onDelete: 'CASCADE' })
    user!: User
 
    @Column()

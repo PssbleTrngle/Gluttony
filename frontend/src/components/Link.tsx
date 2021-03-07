@@ -10,7 +10,8 @@ const style = (p: { theme: Theme }) => css`
    }
 
    :disabled {
-      color: #AAA
+      color: #AAA;
+      cursor: not-allowed;
    }
 `
 

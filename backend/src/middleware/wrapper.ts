@@ -4,7 +4,7 @@ import { stripHidden } from '../decorators/Hidden'
 import NotFoundError from '../error/NotFoundError'
 import UnauthorizedError from '../error/UnauthorizedError'
 import authenticate from '../middleware/authenticate'
-import Token from '../models/Token'
+import Session from '../models/Session'
 import User from '../models/User'
 
 export type RequestHandler<R extends Request = Request> = (req: R, res: Response, next: NextFunction) => unknown
@@ -12,7 +12,7 @@ export type ErrorRequestHandler = (error: Error, req: Request, res: Response, ne
 
 export interface AuthRequest extends Request {
    user: User
-   token: Token
+   session: Session
 }
 
 export function wrap(func: RequestHandler) {

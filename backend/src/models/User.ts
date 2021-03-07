@@ -1,10 +1,12 @@
-import bcrypt from 'bcrypt'
-import { BaseEntity, BeforeInsert, Column, Entity, OneToMany } from 'typeorm'
-import Hidden from '../decorators/Hidden'
+import { BaseEntity, Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm'
 import UUID from '../decorators/UUID'
 import BadRequestError from '../error/BadRequestError'
+import Credentials from './Credentials'
+import Session from './Session'
 import Timestamps from './Timestamps'
-import Token from './Token'
+
+export type LazyMany<E extends BaseEntity> = Promise<Partial<E>[]> | Partial<E>[]
+export type LazyOne<E extends BaseEntity> = Promise<Partial<E>> | Partial<E>
 
 export enum UserRole {
    ADMIN = 'admin',
@@ -20,42 +22,32 @@ export default class User extends BaseEntity {
    @Column(() => Timestamps)
    timestamps!: Timestamps
 
-   @Column({ unique: true })
+   @Column()
    username!: string
 
-   @Column({ unique: true, nullable: true })
-   email?: string
-
    @Column({ default: false })
-   emailVerified!: boolean
-
-   @Hidden()
-   @Column()
-   password!: string
-
-   @Hidden()
-   @Column()
-   salt!: string
+   verified!: boolean
 
    @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
    role!: UserRole
 
-   @OneToMany(() => Token, t => t.user, { cascade: true })
-   tokens!: Promise<Partial<Token>[]>
+   @OneToMany(() => Session, t => t.user, { cascade: true })
+   sessions!: LazyMany<Session>
 
-   @BeforeInsert()
-   async setPassword(password?: string) {
-      this.salt ??= bcrypt.genSaltSync()
-      this.password = bcrypt.hashSync(this.password ?? password, this.salt)
-   }
+   //@OneToMany(() => Credentials, a => a.user, { cascade: true })
+   //accounts!: LazyMany<Credentials>
+
+   @OneToOne(() => Credentials, c => c.user, { cascade: true, eager: true, nullable: true })
+   @JoinColumn()
+   credentials?: Credentials
 
    static async register(data: { username: string; email?: string; password: string; role?: UserRole }) {
-      const { password, username, email } = data
+      const { email, password, ...user } = data
 
-      const existing = await User.createQueryBuilder().orWhere('(email IS NOT NULL AND email = :email) OR username = :username', { email, username }).getOne()
-
+      const existing = await Credentials.findOne({ email })
       if (existing) throw new BadRequestError('User with this username does already exist')
 
-      return await User.create({ ...data, password }).save()
+      const credentials = Credentials.create({ email, password })
+      return await User.create({ ...user, credentials }).save()
    }
 }
