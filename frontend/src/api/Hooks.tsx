@@ -1,6 +1,6 @@
 import { config, Promise } from 'bluebird'
 import querystring from 'query-string'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import Cookies from 'universal-cookie'
 import ApiError from './ApiError'
 import { AppStatus } from './models'
@@ -28,7 +28,8 @@ async function request<T>(method: string, endpoint: string, body?: string, token
    return json as T
 }
 
-export function useApi<M>(endpoint: string, query: Record<string, any> = {}) {
+type Query = Record<string, any>
+export function useFetch<M>(endpoint: string, query: Query = {}) {
    const [data, setData] = useState<M | undefined>()
 
    const url = useMemo(() => {
@@ -44,6 +45,18 @@ export function useApi<M>(endpoint: string, query: Record<string, any> = {}) {
    }, [send])
 
    return [data, loading, error, send] as [M | undefined, boolean, Error | undefined, () => void]
+}
+
+type Render<T> = (value: T) => ReactElement
+export function useLoading<M>(endpoint: string, queryOrRender: Query | Render<M>, render?: Render<M>): ReactElement {
+   const q = typeof queryOrRender === 'function' ? undefined : queryOrRender
+   const r = typeof queryOrRender === 'function' ? queryOrRender : render
+
+   const [data, loading] = useFetch(endpoint, q)
+
+   if (data) return r?.(data) ?? <p>No render supplied</p>
+   else if (loading) return <p>...</p>
+   else return <p>Not Found</p>
 }
 
 type Method = 'POST' | 'PUT' | 'DELETE' | 'GET' | 'HEAD'
@@ -63,10 +76,7 @@ export function useRequest<R>(method: Method, endpoint: string, body?: Record<st
          request<R>(method, endpoint, encodedBody)
             .then(r => onSuccess?.(r))
             .then(() => cookies.get('refresh-token') ? AppStatus.LOGGED_IN : AppStatus.LOGGED_OUT)
-            .catch(e => {
-               setError(e)
-               if(e.status === 500) return AppStatus.OFFLINE
-            })
+            .catch(e => setError(e))
             .then(s => {
                if (s) setStatus(s)
             })

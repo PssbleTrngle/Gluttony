@@ -8,17 +8,17 @@ export type StaticEntity<E extends BaseEntity> = typeof BaseEntity & { new (): E
 
 export default (app: IRouter) => {
    const router = Router()
-   app.use('/show', router)
+   app.use('/season', router)
 
    router.get(
-      '/:slug',
+      '/:id',
       celebrate({
          params: {
-            slug: Joi.string().required(),
+            id: Joi.string().required(),
          },
       }),
       wrap(async req => {
-         const show = await api.getShow(req.params.slug)
+         const show = await api.getSeason(req.params.id)
          return show
       })
    )

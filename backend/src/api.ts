@@ -1,6 +1,7 @@
 import axios from 'axios'
 import Cache from 'node-cache'
-import config from './config'
+import config, { integer } from './config'
+import { exists } from './util'
 
 interface Show {
    id: string
@@ -44,25 +45,45 @@ class Api {
          })
          return response.data.data
       } catch (e) {
+         console.warn(`Request to '${endpoint}' failed`)
+         console.log(e.response)
          throw new Error(e.message)
       }
    }
 
-   async cacheOr<T>(key: string, getter: () => Promise<T>): Promise<T> {
+   async cacheOr<T>(key: string, getter: () => Promise<T | undefined>, additionalKeys?: (t: T) => string[]): Promise<T | undefined> {
       const cached = this.cache.get<T>(key)
       if (cached) return cached
 
       const data = await getter()
-      this.cache.set(key, data)
+
+      if (exists(data)) {
+         const keys = [key, ...(additionalKeys?.(data) ?? [])]
+         keys.forEach(k => this.cache.set(k, data))
+      }
+
       return data
    }
 
-   async findShow(name: string) {
-      return this.cacheOr(`show/${name}`, async () => {
-         const results = await this.fetch<Show[]>(`/search?type=series&query=${name}`)
-         console.log(results.map(r => r.name))
-         if (results.length) return await this.fetch<Show>(`/series/${results[0].tvdb_id}`)
-      })
+   async getSeason(id: string | number) {
+      return this.cacheOr(`season/${id}`, () => this.fetch(`/seasons/${id}/extended`))
+   }
+
+   async getShow(name: string) {
+      return this.cacheOr(
+         `show/${name}`,
+         async () => {
+            const id = integer(name) ?? this.findId(name)
+            if (id) return await this.fetch<Show>(`/series/${id}/extended`)
+         },
+         s => [s.id, s.slug].map(id => `show/${id}`)
+      )
+   }
+
+   private async findId(name: string) {
+      const results = await this.fetch<(Show | undefined)[]>(`/search?type=series&query=${name}`)
+      console.log(results.map(r => r?.name))
+      return integer(results[0]?.tvdb_id)
    }
 }
 

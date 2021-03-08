@@ -4,13 +4,13 @@ import styled from '@emotion/styled';
 import { DateTime } from 'luxon';
 import { transparentize } from "polished";
 import { FC, Fragment } from "react";
-import { useApi, useRequest } from "../api/hooks";
+import { useFetch, useRequest } from "../api/hooks";
 import { ISession } from "../api/models";
 import { Button } from '../components/Inputs';
 import { Title } from '../components/Text';
 
 const Sessions: FC = () => {
-   const [sessions] = useApi<ISession[]>('token')
+   const [sessions] = useFetch<ISession[]>('token')
 
    const style = css`
       padding: 10px;
